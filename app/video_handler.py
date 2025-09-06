@@ -31,7 +31,7 @@ def download_youtube_audio(url: str, filename: str = "yt_audio") -> str:
         'outtmpl': filename,
         'quiet': True,
         'noplaylist': True,
-        # ✅ 컨테이너에 ffmpeg 설치되어 있으므로 별도 경로 지정 불필요
+        # 컨테이너에 ffmpeg 설치되어 있으므로 별도 경로 지정 불필요
         'postprocessors': [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3'}],
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -41,7 +41,7 @@ def download_youtube_audio(url: str, filename: str = "yt_audio") -> str:
 def get_whisper_transcript(audio_path: str) -> list[str]:
     model = whisper.load_model("base")
     result = model.transcribe(audio_path)
-    lines = result["text"].split(". ")
+    lines = result["text"].replace('.', '').split(" ")
     return [line.strip() for line in lines if line.strip()]
 
 def is_similar(a: str, b: str, threshold: int = 85) -> bool:
