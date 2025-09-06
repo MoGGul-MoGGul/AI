@@ -49,6 +49,7 @@
     - `Playwright`를 사용하여 웹페이지의 스크린샷을 찍거나, 유튜브/이미지 URL에서 직접 썸네일을 추출합니다.
     - 생성된 썸네일은 **AWS S3**에 업로드되어 URL로 관리됩니다.
 - **벡터 데이터베이스 활용**: LangChain 파이프라인을 통해 처리된 텍스트를 벡터로 변환하고 **PGVector**에 저장하여 추후 검색 및 활용 가능성을 열어둡니다.
+- 자세한 API 명세는 [API 명세서 주소](https://www.notion.so/AI-API-2648aa8cd0958058a783c722aafeff3d?source=copy_link) 참고하세요.
 
 ## 툴체인 & 프레임워크
 
@@ -158,6 +159,36 @@ Docker 컨테이너가 정상적으로 실행되면, FastAPI 웹 서버는 http:
     - Response: 생성된 썸네일 이미지(PNG) 또는 유튜브 썸네일 URL로 리다이렉트
 
 API 테스트는 Postman과 같은 도구를 사용하거나 FastAPI에서 제공하는 Swagger UI (http://localhost:8000/docs)를 통해 할 수 있습니다.
+
+---
+
+### 메인 파이프라인 (async-index)
+이 파이프라인은 URL을 입력받아 콘텐츠 유형에 따라 적절한 처리 과정을 거쳐 최종 결과를 생성합니다.
+
+1.  **URL 입력**: 사용자가 `POST /async-index/` 엔드포인트에 URL을 전송합니다.
+2.  **작업 등록**: FastAPI 애플리케이션(`app/main.py`)은 Celery 큐에 `process_url_task` 작업을 등록하고, 즉시 작업 ID를 반환합니다.
+3.  **썸네일 생성**: Celery 워커는 `app/summarizer.py`의 `process_url_task`를 실행하여, 먼저 `app/thumbnail_handler.py`를 통해 썸네일을 생성하고 AWS S3에 업로드합니다.
+4.  **콘텐츠 유형 감지**: 워커는 `requests.head`를 사용하여 URL의 `Content-Type`을 확인하고, 유튜브 URL은 별도로 식별합니다.
+5.  **콘텐츠 추출 및 처리**:
+    * **웹페이지**:
+        * `app/extractor.py`를 사용하여 웹페이지 본문을 추출합니다. 네이버 블로그는 `Playwright`를 사용하고, 그 외는 `requests`와 `BeautifulSoup`를 사용합니다.
+        * `app/text_filter.py`를 통해 불필요한 텍스트를 제거합니다.
+    * **유튜브**:
+        * `app/video_handler.py`를 사용하여 영상의 자막(`YouTubeTranscriptApi`)과 음성(`Whisper`)을 추출하여 통합된 텍스트를 만듭니다.
+    * **이미지**:
+        * `app/image_handler.py`를 사용하여 이미지에서 `EasyOCR`로 텍스트를 추출합니다.
+6.  **AI 요약 및 태그 생성**: 추출된 텍스트를 `app/langchain_pipe.py`로 전달하여, `app/ai_utils.py`의 `summarize_and_tag` 함수를 통해 OpenAI 모델로 제목, 요약, 태그를 생성합니다.
+7.  **결과 반환**: 최종 결과(제목, 요약, 태그, 썸네일 URL)를 딕셔너리 형태로 반환하며, 이 결과는 Celery에 저장됩니다.
+8.  **결과 조회**: 클라이언트는 `GET /summary-result/{task_id}` 엔드포인트를 주기적으로 호출(폴링)하여 작업 완료 상태를 확인하고 최종 결과를 받습니다.
+
+### 썸네일 생성 파이프라인 (thumbnail)
+이 파이프라인은 썸네일 생성만을 담당합니다.
+
+1.  **URL 입력**: 사용자가 `POST /thumbnail` 엔드포인트에 URL을 전송합니다.
+2.  **썸네일 유형 감지**: `app/thumbnail_handler.py`의 `generate_thumbnail` 함수는 URL이 유튜브, 이미지, 또는 일반 웹페이지인지 감지합니다.
+3.  **썸네일 생성**:
+    * **유튜브**: 고정된 유튜브 썸네일 URL로 리디렉션 응답을 반환합니다.
+    * **이미지/웹페이지**: `Playwright`를 사용하여 웹페이지 스크린샷을 찍거나, 이미지를 직접 다운로드하여 PNG 형식의 바이트 데이터를 반환합니다.
 
 ---
 

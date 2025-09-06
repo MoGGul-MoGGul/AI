@@ -13,6 +13,12 @@ logger = logging.getLogger(__name__)
 def upload_to_s3(data, file_extension):
     """S3에 썸네일 데이터를 업로드하고 URL을 반환합니다."""
     try:
+        # .env 파일에서 AWS 계정 ID를 가져옵니다.
+        aws_account_id = os.getenv("AWS_ACCOUNT_ID")
+        if not aws_account_id:
+            logger.error("AWS_ACCOUNT_ID가 .env 파일에 설정되지 않았습니다.")
+            return None
+
         s3 = boto3.client(
             's3',
             aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
@@ -20,17 +26,17 @@ def upload_to_s3(data, file_extension):
             region_name='ap-northeast-2'
         )
         bucket_name = os.getenv("AWS_S3_BUCKET_NAME")
-        # 파일 이름을 UUID로 생성하여 중복 방지
         file_name = f"thumbnails/{uuid.uuid4()}.{file_extension}"
 
         s3.put_object(
             Bucket=bucket_name,
             Key=file_name,
             Body=data,
-            ContentType=f'image/{file_extension}'
+            ContentType=f'image/{file_extension}',
+            # 버킷 소유자 계정을 확인하는 파라미터
+            ExpectedBucketOwner=aws_account_id
         )
         
-        # 업로드된 파일의 URL 반환
         return f"https://{bucket_name}.s3.ap-northeast-2.amazonaws.com/{file_name}"
 
     except NoCredentialsError:

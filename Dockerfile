@@ -45,9 +45,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libnss3 libnspr4 libdbus-1-3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libatspi2.0-0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libxkbcommon0 libpango-1.0-0 libcairo2 libasound2 \
   && rm -rf /var/lib/apt/lists/*
 
+# 1. 권한 없는 'app' 그룹 및 사용자 생성
+RUN groupadd -r appgroup && useradd --no-log-init -r -g appgroup appuser
+
 # Builder 단계에서 설치한 가상 환경 복사
 COPY --from=builder /opt/venv /opt/venv
-# Builder 단계에서 설치한 Playwright 브라우저 복사 (이제 이 경로에 파일이 존재합니다)
+# Builder 단계에서 설치한 Playwright 브라우저 복사
 COPY --from=builder /ms-playwright /ms-playwright
 
 # 환경 변수 설정
@@ -57,5 +60,8 @@ ENV PLAYWRIGHT_BROWSERS_PATH="/ms-playwright"
 # 작업 디렉토리 설정
 WORKDIR /app
 
-# 이 이미지는 기본 이미지이므로 CMD를 지정하지 않습니다.
-# 각 서비스(web, celery)가 CMD를 오버라이드하여 사용합니다.
+# 2. /app 디렉토리의 소유권을 appuser에게 부여
+RUN chown -R appuser:appgroup /app
+
+# 3. 기본 사용자를 appuser로 전환
+USER appuser
