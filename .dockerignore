@@ -27,3 +27,15 @@ __pycache__
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+# Testing files and reports
+tests/
+pytest.ini
+.coverage
+coverage.xml
+htmlcov/
+sonar-project.properties
+
+# OS-specific files
+.DS_Store
+Thumbs.db
