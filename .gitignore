@@ -3,3 +3,4 @@ __pycache__/
 .env
 .sonar/.sonar_lock
 .sonar/report-task.txt
+.sonar/scanner-report/analysis.log

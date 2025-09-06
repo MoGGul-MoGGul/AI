@@ -58,10 +58,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxfixes3 \
     libxkbcommon0 \
     libxrandr2 \
+  # 사용자 및 그룹 생성
+  && groupadd -r appgroup && useradd --no-log-init -r -g appgroup appuser \
+  # apt 캐시 정리
   && rm -rf /var/lib/apt/lists/*
-
-# 1. 권한 없는 'app' 그룹 및 사용자 생성
-RUN groupadd -r appgroup && useradd --no-log-init -r -g appgroup appuser
 
 # Builder 단계에서 설치한 가상 환경 복사
 COPY --from=builder /opt/venv /opt/venv

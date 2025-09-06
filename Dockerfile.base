@@ -19,11 +19,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 나머지 애플리케이션 코드를 복사합니다.
 COPY . /app
 
-# Playwright 브라우저 바이너리를 설치합니다.
-RUN playwright install --with-deps chromium
+# Playwright, 사용자 생성을 위한 브라우저 바이너리를 설치합니다.
+RUN playwright install --with-deps chromium \
+    && groupadd -r appgroup && useradd --no-log-init -r -g appgroup appuser && chown -R appuser:appgroup /app
 
-# 1. 권한 없는 'app' 그룹 및 사용자 생성 후 /app 디렉토리 소유권 부여
-RUN groupadd -r appgroup && useradd --no-log-init -r -g appgroup appuser && chown -R appuser:appgroup /app
 
 # 2. 기본 사용자를 appuser로 전환하여 보안 강화
 USER appuser
