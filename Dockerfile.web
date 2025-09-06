@@ -1,7 +1,7 @@
 # 이 Dockerfile은 FastAPI 웹 서비스를 위한 이미지를 생성합니다.
 # 이미 빌드된 ai-base:latest 이미지를 사용하여 의존성 설치 과정을 건너뛰고,
 # 애플리케이션 코드만 추가합니다.
-FROM ai-base:latest
+FROM ai-base:1.0.0
 
 # 작업 디렉토리에 애플리케이션 코드를 복사합니다.
 COPY ./app /app/app

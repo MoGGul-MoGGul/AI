@@ -1,4 +1,4 @@
-# AI/app/langchain_pipe.py (파일 전체를 아래 코드로 교체)
+# AI/app/langchain_pipe.py
 
 import os
 from dotenv import load_dotenv
@@ -17,7 +17,8 @@ def run_langchain_pipeline(raw_text: str):
     embeddings = OpenAIEmbeddings(openai_api_key=os.getenv("OPENAI_API_KEY"))
 
     conn = os.getenv("PGVECTOR_CONNECTION_STRING") or os.getenv("DB_URL")
-    vectorstore = PGVector.from_documents(
+    
+    PGVector.from_documents(
         documents=docs,
         embedding=embeddings,
         collection_name="tip_data",
