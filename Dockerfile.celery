@@ -1,6 +1,6 @@
 # 이 Dockerfile은 Celery 워커 서비스를 위한 이미지를 생성합니다.
 # 웹 서비스와 마찬가지로 ai-base:latest 이미지를 활용하여 빌드 시간을 단축합니다.
-FROM ai-base:latest
+FROM ai-base:1.0.0
 
 # 작업 디렉토리에 애플리케이션 코드를 복사합니다.
 COPY ./app /app/app

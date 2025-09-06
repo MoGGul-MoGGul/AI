@@ -1,0 +1,29 @@
+# .dockerignore
+
+# Git / Version Control
+.git
+.gitignore
+
+# Docker specific files
+.dockerignore
+Dockerfile*
+docker-compose.yml
+
+# Python virtual environment and cache
+venv
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+
+# IDE and editor directories
+.idea
+.vscode
+
+# Environment files (should be passed at runtime, not built into the image)
+.env
+
+# OS-specific files
+.DS_Store
+Thumbs.db

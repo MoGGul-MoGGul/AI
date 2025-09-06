@@ -1,14 +1,14 @@
 # =====================================================================
 # Stage 1: Builder - 의존성 설치를 위한 단계
 # =====================================================================
-FROM python:3.11-slim as builder
+FROM python:3.11-slim AS builder
 
 # 시스템 패키지 설치
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    ffmpeg \
     libgl1 \
     libglib2.0-0 \
-    ffmpeg \
   && rm -rf /var/lib/apt/lists/*
 
 # 가상 환경 생성
@@ -38,16 +38,34 @@ FROM python:3.11-slim
 
 # 필수 런타임 시스템 패키지 및 Playwright 의존성 수동 설치
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libatspi2.0-0 \
+    libcairo2 \
+    libcups2 \
+    libdbus-1-3 \
+    libdrm2 \
+    libgbm1 \
     libgl1 \
     libglib2.0-0 \
-    ffmpeg \
-    # Playwright 실행에 필요한 라이브러리들
-    libnss3 libnspr4 libdbus-1-3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libatspi2.0-0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libxkbcommon0 libpango-1.0-0 libcairo2 libasound2 \
+    libnspr4 \
+    libnss3 \
+    libpango-1.0-0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxkbcommon0 \
+    libxrandr2 \
+  # 사용자 및 그룹 생성
+  && groupadd -r appgroup && useradd --no-log-init -r -g appgroup appuser \
+  # apt 캐시 정리
   && rm -rf /var/lib/apt/lists/*
 
 # Builder 단계에서 설치한 가상 환경 복사
 COPY --from=builder /opt/venv /opt/venv
-# Builder 단계에서 설치한 Playwright 브라우저 복사 (이제 이 경로에 파일이 존재합니다)
+# Builder 단계에서 설치한 Playwright 브라우저 복사
 COPY --from=builder /ms-playwright /ms-playwright
 
 # 환경 변수 설정
@@ -57,5 +75,8 @@ ENV PLAYWRIGHT_BROWSERS_PATH="/ms-playwright"
 # 작업 디렉토리 설정
 WORKDIR /app
 
-# 이 이미지는 기본 이미지이므로 CMD를 지정하지 않습니다.
-# 각 서비스(web, celery)가 CMD를 오버라이드하여 사용합니다.
+# 2. /app 디렉토리의 소유권을 appuser에게 부여
+RUN chown -R appuser:appgroup /app
+
+# 3. 기본 사용자를 appuser로 전환
+USER appuser

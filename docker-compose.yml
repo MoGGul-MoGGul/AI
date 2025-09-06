@@ -6,8 +6,8 @@ services:
   base:
     build:
       context: .
-      dockerfile: Dockerfile # 기본 Dockerfile을 사용하여 ai-base:latest 이미지를 생성합니다.
-    image: ai-base:latest
+      dockerfile: Dockerfile
+    image: ai-base:1.0.0
 
   db:
     image: postgres:13
